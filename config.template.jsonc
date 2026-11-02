@@ -1,0 +1,191 @@
+{
+  // TEMPLATE: copy this file's JSON object to config.json and edit that file.
+  // The application reads config.json only. Remove these // comment lines when
+  // copying, because config.json must be valid JSON.
+
+  "appTitle": "Paikkatietokysely",
+  "featureLayerUrl": "https://your-organization.maps.arcgis.com/.../FeatureServer/0",
+  "map": {
+    "basemap": "topo-vector",
+    "initialView": {
+      "type": "center",
+      "center": [22.8, 63.1],
+      "zoom": 7
+    },
+    "backgroundLayers": [
+      {
+        "id": "background-layer-1",
+        "enabled": true,
+        "type": "feature",
+        "url": "https://your-organization.maps.arcgis.com/.../FeatureServer/0",
+        "title": "Tausta-aineiston nimi",
+        "geometryType": "polyline",
+        "visibleByDefault": false,
+        "color": [210, 105, 30, 190],
+        "width": 1,
+        "source": "Aineiston tuottaja",
+        "license": "Aineiston lisenssi"
+      }
+    ]
+  },
+  "questionnaire": {
+    "introduction": "Paikkatietokyselyssä kerätään tietoa datakeskushankkeista.",
+    "steps": {
+      "respondent": "Vastaajan tiedot",
+      "features": "Aluekohteiden tiedot",
+      "submission": "Vastauksen lähetys"
+    },
+    "respondent": {
+      "title": "Vastaajan tiedot",
+      "description": "Nämä tiedot liitetään kaikkiin tämän vastauksen kohteisiin.",
+      "editingDescription": "Voit muokata vastaajan tietoja. Muutokset tallentuvat kaikkiin tämän vastauksen kohteisiin.",
+      "fields": [
+        {
+          "name": "vastaaja_nimi",
+          "label": "Vastaajan nimi",
+          "type": "text",
+          "required": true,
+          "autocomplete": "name",
+          "validation": {
+            "maxLength": 256
+          }
+        },
+        {
+          "name": "vastaaja_organisaatio",
+          "label": "Vastaajan organisaatio",
+          "type": "text",
+          "required": true,
+          "autocomplete": "organization",
+          "validation": {
+            "maxLength": 256
+          }
+        }
+      ]
+    },
+    "geometryType": "polygon",
+    "featureActionLabel": "Luo aluekohde",
+    "features": {
+      "title": "Aluekohteen tiedot",
+      "description": "Täytä piirtämäsi alueen tiedot.",
+      "tableTitle": "Luodut aluekohteet",
+      "idColumnLabel": "Kohteen tunniste",
+      "actionsColumnLabel": "Toiminnot",
+      "emptyMessage": "Vastauksessa ei ole aluekohteita.",
+      "fields": [
+        {
+          "name": "hanke_nimi",
+          "label": "Hankkeen nimi",
+          "type": "text",
+          "required": true,
+          "validation": {
+            "maxLength": 256
+          }
+        },
+        {
+          "name": "hanke_tila",
+          "label": "Hankkeen tila",
+          "type": "select",
+          "required": true,
+          "placeholder": "Valitse tila",
+          "options": [
+            {
+              "value": "suunnitteilla",
+              "label": "Suunnitteilla"
+            },
+            {
+              "value": "toteutuksessa",
+              "label": "Toteutuksessa"
+            },
+            {
+              "value": "valmis",
+              "label": "Valmis"
+            }
+          ]
+        },
+        {
+          "name": "hanke_kuvaus",
+          "label": "Hankkeen kuvaus",
+          "type": "textarea",
+          "required": false,
+          "validation": {
+            "maxLength": 256
+          }
+        }
+      ]
+    },
+    "geometryMeasurements": {
+      "polygon": {
+        "label": "Pinta-ala (km²)",
+        "unit": "square-kilometers",
+        "precision": 2
+      },
+      "polyline": {
+        "label": "Pituus (km)",
+        "unit": "kilometers",
+        "precision": 2
+      },
+      "point": null
+    },
+    "systemFields": {
+      "localId": "paikallinen_id",
+      "responseId": "vastaus_id"
+    },
+    "optionalLabel": "vapaaehtoinen",
+    "requiredFieldMessage": "on pakollinen.",
+    "selectPlaceholder": "Valitse",
+    "submitLabel": "Lähetä vastaus ArcGIS Onlineen",
+    "buttons": {
+      "cancel": "Peruuta",
+      "saveRespondent": "Tallenna vastaajan tiedot",
+      "saveRespondentEdit": "Tallenna tiedot",
+      "cancelFeature": "Peruuta kohde",
+      "saveFeature": "Tallenna kohde",
+      "close": "Sulje",
+      "viewFeatures": "Tarkastele luotuja kohteita",
+      "editGeometry": "Muokkaa geometriaa",
+      "deleteFeature": "Poista kohde",
+      "editField": "Muokkaa kenttää",
+      "saveField": "Tallenna kentän muutos",
+      "cancelField": "Peruuta kentän muokkaus"
+    },
+    "help": {
+      "digitizingTitle": "Digitointiohjeet",
+      "digitizingButton": "Digitointiohjeet",
+      "digitizingItems": [
+        "Aloita digitointi valitsemalla Luo aluekohde.",
+        "Liikuta karttaa vetämällä hiirellä. Lähennä ja loitonna kartan vasemman yläkulman + ja − painikkeilla tai hiiren rullalla.",
+        "Napsauta alueen taitepisteet kartalle hiiren vasemmalla painikkeella. Piirrä vähintään kolme erillistä pistettä.",
+        "Kun olet lisännyt viimeisen taitepisteen, paina Enter. Kartta sulkee polygonin yhdistämällä viimeisen ja ensimmäisen pisteen.",
+        "Voit keskeyttää keskeneräisen digitoinnin kartan Peruuta-painikkeella. Keskeneräistä aluetta ei tallenneta.",
+        "Jos näet virheilmoituksen, polygonin geometria ei ole kelvollinen tai siinä ei ole riittävästi erillisiä taitepisteitä. Piirrä alue uudelleen."
+      ],
+      "geometryEditingTitle": "Geometrian muokkausohjeet",
+      "geometryEditingButton": "Geometrian muokkausohjeet",
+      "geometryEditingItems": [
+        "Siirrä verteksiä vetämällä ja lisää uusi napsauttamalla katkoviivaa.",
+        "Poista verteksi napsauttamalla sitä hiiren oikealla painikkeella.",
+        "Tallenna muutos kartan painikkeesta tai hylkää se valitsemalla Peruuta."
+      ]
+    }
+  }
+}
+
+// PoC-kyselyn ensimmäisen version keskeiset asetukset kommentoituna malliksi:
+// "appTitle": "Paikkatietokysely"
+// "featureLayerUrl": "https://your-organization.maps.arcgis.com/.../FeatureServer/0"
+// "map.initialView": { "type": "center", "center": [22.8, 63.1], "zoom": 7 }
+// "questionnaire.geometryType": "polygon"
+// "questionnaire.respondent.fields": [
+//   { "name": "vastaaja_nimi", "type": "text", "required": true },
+//   { "name": "vastaaja_organisaatio", "type": "text", "required": true }
+// ]
+// "questionnaire.features.fields": [
+//   { "name": "hanke_nimi", "type": "text", "required": true, "validation": { "maxLength": 256 } },
+//   { "name": "hanke_tila", "type": "select", "required": true, "options": ["suunnitteilla", "toteutuksessa", "valmis"] },
+//   { "name": "hanke_kuvaus", "type": "textarea", "required": false, "validation": { "maxLength": 256 } }
+// ]
+// "questionnaire.geometryMeasurements": {
+//   "polygon": { "label": "Pinta-ala (km²)", "unit": "square-kilometers", "precision": 2 },
+//   "polyline": { "label": "Pituus (km)", "unit": "kilometers", "precision": 2 },
+//   "point": null
+// }

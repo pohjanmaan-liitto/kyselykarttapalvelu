@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="fi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Paikkatietokyselyn selainpohjainen proof of concept."
+    />
+    <title>Paikkatietokysely</title>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/5.1/@arcgis/core/assets/esri/themes/light/main.css"
+    />
+    <link rel="stylesheet" href="./src/styles.css?v=13" />
+    <script type="module" src="https://js.arcgis.com/5.1/"></script>
+    <script type="module" src="./src/app.js?v=15"></script>
+  </head>
+  <body>
+    <main class="app">
+      <header class="app-header">
+        <div class="app-brand">
+          <p class="eyebrow">Proof of concept</p>
+          <h1 id="app-title">Paikkatietokysely</h1>
+          <p id="questionnaire-intro" class="questionnaire-intro"></p>
+          <div class="feature-actions">
+            <button id="digitizing-help-button" class="secondary-button help-button" type="button" hidden>
+              Digitointiohjeet
+            </button>
+            <button id="geometry-edit-help-button" class="secondary-button help-button" type="button" hidden>
+              Geometrian muokkausohjeet
+            </button>
+            <button id="view-features-button" class="secondary-button" type="button" hidden>
+              Tarkastele luotuja kohteita
+            </button>
+          </div>
+        </div>
+        <p id="app-status" class="app-status" role="status" aria-live="polite">
+          Karttaa ladataan...
+        </p>
+        <ol class="workflow" aria-label="Kyselyn vaiheet">
+          <li id="respondent-step" class="workflow-step-item workflow-step-item--active">
+            <button id="respondent-step-button" class="workflow-step workflow-step--button" type="button" disabled>
+              <span class="workflow-step-number">1</span>
+              <span id="respondent-step-label" class="workflow-step-label">Vastaajan tiedot</span>
+            </button>
+          </li>
+          <li id="features-step" class="workflow-step-item workflow-step-item--pending" aria-disabled="true">
+            <span class="workflow-step-number">2</span>
+            <span class="workflow-step-content">
+              <span id="features-step-label" class="workflow-step-label">Aluekohteiden tiedot</span>
+              <button id="create-feature-button" class="primary-button" type="button" disabled hidden>
+                Luo aluekohde
+              </button>
+            </span>
+          </li>
+          <li id="submission-step" class="workflow-step-item workflow-step-item--pending" aria-disabled="true">
+            <span class="workflow-step-number">3</span>
+            <span class="workflow-step-content">
+              <span id="submission-step-label" class="workflow-step-label">Vastauksen lähetys</span>
+              <span class="workflow-step-actions">
+                <span id="submission-step-note" class="workflow-step-note">Lukittu: lisää vähintään yksi kohde</span>
+                <button id="submit-response-button" class="primary-button" type="button" hidden disabled>
+                  Lähetä vastaus ArcGIS Onlineen
+                </button>
+              </span>
+            </span>
+          </li>
+        </ol>
+      </header>
+      <div class="map-container">
+        <div id="viewDiv" class="map-view" aria-label="Kartta"></div>
+        <aside class="map-layer-panel" aria-label="Karttatasot">
+          <h2>Karttatasot</h2>
+          <div id="map-layer-options"></div>
+        </aside>
+        <button
+          id="cancel-drawing-button"
+          class="secondary-button map-cancel-button"
+          type="button"
+          hidden
+        >
+          Peruuta
+        </button>
+        <div id="geometry-edit-actions" class="map-edit-actions" hidden>
+          <button id="save-geometry-edit-button" class="primary-button" type="button">
+            Tallenna geometria
+          </button>
+          <button id="cancel-geometry-edit-button" class="secondary-button" type="button">
+            Peruuta
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <dialog id="respondent-dialog" class="form-dialog" aria-labelledby="respondent-title">
+      <form id="respondent-form" novalidate>
+        <h2 id="respondent-title">Vastaajan tiedot</h2>
+        <p id="respondent-intro" class="form-intro">Nämä tiedot liitetään kaikkiin tämän vastauksen kohteisiin.</p>
+        <div id="respondent-fields"></div>
+        <div class="dialog-actions">
+          <button class="secondary-button" type="button" data-close-dialog>Peruuta</button>
+          <button id="respondent-submit" class="primary-button" type="submit" disabled>
+            Tallenna vastaajan tiedot
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="feature-dialog" class="form-dialog" aria-labelledby="feature-title">
+      <form id="feature-form" novalidate>
+        <h2 id="feature-title">Aluekohteen tiedot</h2>
+        <p class="form-intro">Täytä piirtämäsi alueen tiedot.</p>
+        <div id="feature-fields"></div>
+        <div class="dialog-actions">
+          <button id="cancel-feature-button" class="secondary-button" type="button">Peruuta kohde</button>
+          <button id="save-feature-button" class="primary-button" type="submit" disabled>
+            Tallenna kohde
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="features-table-dialog" class="features-table-dialog" aria-labelledby="features-table-title">
+      <div class="features-table-header">
+        <div>
+          <h2 id="features-table-title">Luodut aluekohteet</h2>
+          <p id="features-table-count" class="form-intro"></p>
+        </div>
+        <button id="close-features-table-button" class="secondary-button" type="button">
+          Sulje
+        </button>
+      </div>
+      <div class="features-table-scroll">
+        <table class="features-table">
+          <thead>
+            <tr id="features-table-header-row"></tr>
+          </thead>
+          <tbody id="features-table-body"></tbody>
+        </table>
+      </div>
+    </dialog>
+
+    <dialog id="digitizing-help-dialog" class="form-dialog" aria-labelledby="digitizing-help-title">
+      <div>
+        <h2 id="digitizing-help-title">Digitointiohjeet</h2>
+        <ul id="digitizing-help-list" class="help-list"></ul>
+        <div class="dialog-actions">
+          <button id="close-digitizing-help-button" class="primary-button" type="button">Sulje</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="geometry-edit-help-dialog" class="form-dialog" aria-labelledby="geometry-edit-help-title">
+      <div>
+        <h2 id="geometry-edit-help-title">Geometrian muokkausohjeet</h2>
+        <ul id="geometry-edit-help-list" class="help-list"></ul>
+        <div class="dialog-actions">
+          <button id="close-geometry-edit-help-button" class="primary-button" type="button">Sulje</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="thank-you-dialog" class="form-dialog" aria-labelledby="thank-you-title">
+      <div>
+        <h2 id="thank-you-title">Kiitos vastauksestasi</h2>
+        <div class="dialog-actions">
+          <button id="close-questionnaire-button" class="primary-button" type="button">
+            Sulje kysely
+          </button>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>
