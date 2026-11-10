@@ -9,12 +9,14 @@ ArcGIS Onlineen. Paikallinen keskeneräinen vastaus ei säily sivun päivityksen
 
 ```text
 .
-├── config.json       # Kyselyn sisältö, kentät, geometria ja kartan aloitusnäkymä
-├── config.template.jsonc # Aputiedosto uuden config.json-tiedoston luomiseen
+├── questionnaires/
+│   ├── demo.json       # Versionhallittu esimerkkikysely, URL-paikkamerkit
+│   └── demo.local.json # Paikallinen asetustiedosto (gitignoressa)
 ├── index.html        # Sivun runko ja ArcGIS Maps SDK:n CDN-lataus
 ├── src/
 │   ├── app.js        # Konfiguraation tulkinta, kartta, digitointi ja vastaus
 │   └── styles.css    # Kartan, lomakkeiden ja painikkeiden tyylit
+├── .gitignore        # Jättää paikalliset kyselyasetukset versionhallinnan ulkopuolelle
 └── README.md         # Käynnistys- ja testausohjeet
 ```
 
@@ -32,34 +34,44 @@ joka sisältää paikallisen HTTP-palvelimen.
    ```
 
    Jos `py`-komentoa ei löydy, kokeile `python -m http.server 8000`.
-4. Avaa selaimessa [http://localhost:8000](http://localhost:8000).
+4. Avaa selainosoite [http://localhost:8000/?id=demo](http://localhost:8000/?id=demo).
 5. Pysäytä palvelin terminaalissa näppäinyhdistelmällä `Ctrl+C`.
 
+Käynnistä palvelin projektikansion juuresta, jossa `index.html` sijaitsee.
+Kyselyasetusten on oltava `questionnaires`-kansiossa.
 Käytä paikallista HTTP-palvelinta `file://`-osoitteen sijaan, jotta selain voi
-ladata `config.json`-tiedoston. ArcGIS Maps SDK ja kartan taustakartta ladataan
-Esrin palveluista, joten selaimella täytyy olla internet-yhteys.
+ladata kyselyn asetustiedoston. Kyselytunniste on pakollinen; ilman sitä
+sovellus näyttää virheilmoituksen. ArcGIS Maps SDK ja kartan taustakartta
+ladataan Esrin palveluista, joten selaimella täytyy olla internet-yhteys.
 Jos sovellus ei näytä viimeisimpiä käyttöliittymämuutoksia, päivitä sivu
 pakotetusti näppäimillä `Ctrl+F5`.
 
 ## Uuden kyselyn luominen ja asetusten muokkaaminen
 
-Sovellus lukee aina käynnistyessään juurikansion `config.json`-tiedoston.
-Muokkaa sitä, kun haluat muuttaa tämän sovelluskopion kyselyä. Uuden kyselyn
-pohjaksi käytä `config.template.jsonc`-tiedostoa: se sisältää nykyisen PoC:n
-kyselyasetukset ja yleiset paikkamerkit tausta-aineiston palvelulle ja
-lähdemerkinnöille.
+Sovellus lukee URL-parametrin `id` perusteella tiedoston
+`questionnaires/<id>.json`. Esimerkiksi `?id=demo` lataa
+`questionnaires/demo.json`. URL-osoitteessa pitää olla täsmälleen yksi `id`
+-parametri. Tunnisteessa saa käyttää pieniä ASCII-kirjaimia, numeroita ja
+väliviivoja; tunnisteen pitää alkaa ja päättyä kirjaimeen tai numeroon.
+Oletuskyselyä ei ole. Uuden kyselyn lisääminen onnistuu lisäämällä uuden
+tunnisteen mukainen JSON-tiedosto; sovelluksen lähdekoodia tai erillistä
+kyselyrekisteriä ei tarvitse muuttaa.
 
-`config.template.jsonc` on JSON with Comments -tiedosto eikä sellaisenaan kelpaa
-sovelluksen lukemaksi `config.json`-tiedostoksi. Luo uusi asetustiedosto näin:
+Kun sovelluksen osoite on `localhost`, `127.0.0.1` tai `::1`, sovellus käyttää
+ensisijaisesti vastaavaa `questionnaires/<id>.local.json`-tiedostoa, jos se on
+olemassa. Luo esimerkiksi `questionnaires/demo.local.json` kopioimalla
+`demo.json` ja korvaamalla paikkamerkit paikallisilla ArcGIS-palveluosoitteilla.
+`.local.json`-tiedostot ovat gitignoressa, eikä niitä tule lisätä
+versionhallintaan. Muilla osoitteilla paikallista asetusta ei haeta.
 
-1. Kopioi `config.template.jsonc` esimerkiksi varmuuskopioksi tai työpohjaksi
-   nimellä `config-new.jsonc`.
-2. Muokkaa kyselyn otsikkoa, kenttiä, vaihtoehtoja, geometriaa ja muita asetuksia.
-3. Siirrä JSON-objekti `config.json`-tiedostoon ilman `//`-kommenttirivejä.
-   Säilytä kaikki asetusten sisällä olevat pilkut ja lainausmerkit.
-4. Tarkista tiedosto VS Codessa JSON-muodossa tai komennolla
-   `python -m json.tool .\config.json`. Sovellus käyttää muutoksia sivun
-   uudelleenlatauksen jälkeen.
+Versionhallittu kysely-JSON sisältää ArcGIS-osoitteiden sijaan paikkamerkit.
+Myöhempi GitHub Actions -työnkulku voi korvata ne samannimisistä GitHub
+Variables -arvoista: `__DEMO_FEATURE_LAYER_URL__`,
+`__DEMO_BACKGROUND_PROPERTY_BOUNDARIES_URL__` ja
+`__DEMO_BACKGROUND_SHOOTING_RANGES_URL__`. Selain ei voi lukea GitHub Variables
+-arvoja suoraan, eikä paikkamerkkien korvausta tai Pages-julkaisua ole vielä
+toteutettu. Siksi paikallista kehitystä varten tarvitaan `demo.local.json`;
+versionhallittu `demo.json` ei yksinään sisällä toimivia palveluosoitteita.
 
 Lomakkeet, pakollisten
 kenttien tarkistus, kohteiden taulukko, muokkausnäkymä ja ArcGIS-lähetyksen
@@ -90,7 +102,9 @@ ominaisuustiedot muodostetaan samoista kenttämäärityksistä.
   `feature`; `url` on GeoJSON-tiedostopolku tai ArcGISin yksittäisen
   palvelutason REST-osoite. Kullekin määritetään otsikko, geometriatyyppi,
   piirrostyyli, oletusnäkyvyys sekä lähde- ja lisenssitiedot.
-- `featureLayerUrl` osoittaa tallennuskohteeseen.
+- `active` määrittää, onko kysely avoinna vastauksille.
+- `featureLayerUrl` osoittaa tallennuskohteeseen. Julkisessa esimerkkiasetuksessa
+  se on muuttujapaikkamerkki; paikallisessa asetuksessa käytetään oikeaa URL:ia.
 - `systemFields` nimeää sovelluksen paikallisen kohdetunnisteen ja vastauksen tunnistekentän.
 
 Esimerkiksi valintakenttä:
@@ -109,12 +123,12 @@ Esimerkiksi valintakenttä:
 }
 ```
 
-Template sisältää nykyisen PoC:n kyselyasetukset kommentoituina: esimerkiksi
-`geometryType: "polygon"`, pakolliset vastaajan nimikentät, kolme hankekenttää,
-tilavalikon vaihtoehdot sekä polygonin pinta-alan asetukset. Aktiivinen JSON
-objekti sisältää lisäksi esimerkin tausta-aineistotasosta. Korvaa siihen tausta-aineiston sisältävän
-organisaation ArcGIS-palvelun URL, otsikko, lähde ja lisenssitiedot ennen
-käyttöönottoa.
+`questionnaires/demo.json` sisältää nykyisen PoC:n asetukset, kuten
+`geometryType: "polygon"`, pakolliset vastaajan nimikentät, hankekentät,
+tilavalikon vaihtoehdot sekä polygonin pinta-alan asetukset. Uuden kyselyn
+asetukset voi luoda kopioimalla tämän JSON-tiedoston ja muokkaamalla sisältöä.
+Kyselyn `active`-arvolla `false` kysely suljetaan; sovellus ei tällöin tarjoa
+vastaustoimintoja eikä lähetä vastauksia.
 
 Kenttien nimien pitää olla yksilöllisiä, ja tallennettavien kenttien pitää
 löytyä Feature Layerin skeemasta. Muuta määritykseen sopivaksi myös
@@ -222,6 +236,6 @@ yhteensopivassa Web Mercator -koordinaattijärjestelmässä (WKID 3857).
 Polygonien pinta-ala lasketaan geodeettisella pinta-alaoperaattorilla ja
 esitetään neliökilometreinä; tämä huomioi Web Mercator -koordinaattijärjestelmän
 mittakaavavääristymän. ArcGIS Online -tason osoite määritellään
-`config.json`-tiedoston `featureLayerUrl`-asetuksessa.
+kyselykohtaisen JSON-asetuksen `featureLayerUrl`-arvossa.
 
 Lisätietoja: [ArcGIS Maps SDK for JavaScript: Get started](https://developers.arcgis.com/javascript/latest/get-started/)

@@ -1,10 +1,7 @@
 {
-  // TEMPLATE: copy this file's JSON object to config.json and edit that file.
-  // The application reads config.json only. Remove these // comment lines when
-  // copying, because config.json must be valid JSON.
-
   "appTitle": "Paikkatietokysely",
-  "featureLayerUrl": "https://your-organization.maps.arcgis.com/.../FeatureServer/0",
+  "active": true,
+  "featureLayerUrl": "__DEMO_FEATURE_LAYER_URL__",
   "map": {
     "basemap": "topo-vector",
     "initialView": {
@@ -14,17 +11,32 @@
     },
     "backgroundLayers": [
       {
-        "id": "background-layer-1",
+        "id": "property-boundaries",
         "enabled": true,
         "type": "feature",
-        "url": "https://your-organization.maps.arcgis.com/.../FeatureServer/0",
-        "title": "Tausta-aineiston nimi",
+        "popupEnabled": false,
+        "url": "__DEMO_BACKGROUND_PROPERTY_BOUNDARIES_URL__",
+        "title": "Kiinteistörajat – Vaasa",
         "geometryType": "polyline",
         "visibleByDefault": false,
         "color": [210, 105, 30, 190],
         "width": 1,
-        "source": "Aineiston tuottaja",
-        "license": "Aineiston lisenssi"
+        "source": "Maanmittauslaitos, Kiinteistörekisterikartta (vektori)",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      {
+        "id": "shooting-ranges",
+        "enabled": true,
+        "type": "feature",
+        "useServiceRenderer": true,
+        "popupEnabled": true,
+        "url": "__DEMO_BACKGROUND_SHOOTING_RANGES_URL__",
+        "title": "Ampumaradat Pohjanmaa ja Etelä-Pohjanmaa",
+        "geometryType": "point",
+        "visibleByDefault": false,
+        "source": "2015 tehty yhteistyöselvitys",
+        "license": "Lisenssitiedot tarkistettava aineiston ylläpitäjältä."
       }
     ]
   },
@@ -169,23 +181,3 @@
     }
   }
 }
-
-// PoC-kyselyn ensimmäisen version keskeiset asetukset kommentoituna malliksi:
-// "appTitle": "Paikkatietokysely"
-// "featureLayerUrl": "https://your-organization.maps.arcgis.com/.../FeatureServer/0"
-// "map.initialView": { "type": "center", "center": [22.8, 63.1], "zoom": 7 }
-// "questionnaire.geometryType": "polygon"
-// "questionnaire.respondent.fields": [
-//   { "name": "vastaaja_nimi", "type": "text", "required": true },
-//   { "name": "vastaaja_organisaatio", "type": "text", "required": true }
-// ]
-// "questionnaire.features.fields": [
-//   { "name": "hanke_nimi", "type": "text", "required": true, "validation": { "maxLength": 256 } },
-//   { "name": "hanke_tila", "type": "select", "required": true, "options": ["suunnitteilla", "toteutuksessa", "valmis"] },
-//   { "name": "hanke_kuvaus", "type": "textarea", "required": false, "validation": { "maxLength": 256 } }
-// ]
-// "questionnaire.geometryMeasurements": {
-//   "polygon": { "label": "Pinta-ala (km²)", "unit": "square-kilometers", "precision": 2 },
-//   "polyline": { "label": "Pituus (km)", "unit": "kilometers", "precision": 2 },
-//   "point": null
-// }
