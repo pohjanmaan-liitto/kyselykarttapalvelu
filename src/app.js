@@ -53,19 +53,50 @@ let featureLayerUrl;
 let activeGeometryEdit;
 let config;
 
-async function startApp() {
-  const configResponse = await fetch(new URL("../config.json", import.meta.url), {
-    cache: "no-store"
-  });
-  if (!configResponse.ok) {
-    throw new Error(`Asetustiedoston lataus epäonnistui (${configResponse.status}).`);
+async function loadQuestionnaireConfig() {
+  const questionnaireIds = new URLSearchParams(window.location.search).getAll("id");
+  if (questionnaireIds.length !== 1 || !questionnaireIds[0]) {
+    throw new Error("Kyselytunniste puuttuu. Valitse kysely URL-parametrilla, esimerkiksi ?id=demo.");
+  }
+  const questionnaireId = questionnaireIds[0];
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(questionnaireId)) {
+    throw new Error("Kyselytunniste on virheellinen. Käytä pieniä kirjaimia, numeroita ja väliviivoja.");
   }
 
-  config = await configResponse.json();
+  if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)) {
+    const localConfigUrl = new URL(`../questionnaires/${questionnaireId}.local.json`, import.meta.url);
+    const localConfigResponse = await fetch(localConfigUrl, { cache: "no-store" });
+    if (localConfigResponse.ok) {
+      return localConfigResponse.json();
+    }
+    if (localConfigResponse.status !== 404) {
+      throw new Error(`Paikallisen kyselyasetuksen lataus epäonnistui (${localConfigResponse.status}).`);
+    }
+  }
+
+  const configUrl = new URL(`../questionnaires/${questionnaireId}.json`, import.meta.url);
+  const configResponse = await fetch(configUrl, { cache: "no-store" });
+  if (configResponse.status === 404) {
+    throw new Error(`Kyselyä "${questionnaireId}" ei löydy.`);
+  }
+  if (!configResponse.ok) {
+    throw new Error(`Kyselyn asetuksen lataus epäonnistui (${configResponse.status}).`);
+  }
+  return configResponse.json();
+}
+
+async function startApp() {
+  config = await loadQuestionnaireConfig();
   validateConfig(config);
   configureQuestionnaireUi();
   document.querySelector("#app-title").textContent = config.appTitle;
   document.title = config.appTitle;
+  if (!config.active) {
+    document.querySelector(".workflow").hidden = true;
+    document.querySelector(".map-container").hidden = true;
+    setStatus("Tämä kysely on suljettu, eikä siihen voi lähettää vastauksia.");
+    return;
+  }
 
   const [
     Map,
@@ -298,6 +329,7 @@ function validateConfig(config) {
   const fieldTypes = ["text", "textarea", "number", "date", "email", "tel", "select"];
   const questionnaire = config?.questionnaire;
   if (!config || typeof config.appTitle !== "string" ||
+      typeof config.active !== "boolean" ||
       typeof config.featureLayerUrl !== "string" || !config.map?.basemap ||
       !config.map.initialView || !geometryTypes.includes(questionnaire?.geometryType) ||
       !Array.isArray(questionnaire.respondent?.fields) ||
@@ -326,6 +358,11 @@ function validateConfig(config) {
         !["point", "polyline"].includes(layer.geometryType) ||
         typeof layer.enabled !== "boolean")) {
     throw new Error("Asetustiedoston taustatasojen määritys on virheellinen.");
+  }
+  if (isUnresolvedUrl(config.featureLayerUrl) ||
+      backgroundLayers.some((layer) =>
+        layer.type === "feature" && isUnresolvedUrl(layer.url))) {
+    throw new Error("ArcGIS-palveluosoite puuttuu. Käytä paikallista .local.json-asetusta tai julkaisuhetkellä täydennettyä asetusta.");
   }
   const requiredLabels = [
     questionnaire.steps.respondent,
@@ -405,6 +442,10 @@ function validateConfig(config) {
   if (questionnaire.geometryType === "point" && questionnaire.geometryMeasurements?.point) {
     throw new Error("Pistemäisille kohteille ei voi määrittää pinta-ala- tai pituusmittausta.");
   }
+}
+
+function isUnresolvedUrl(value) {
+  return /^__[A-Z0-9_]+__$/.test(value);
 }
 
 function configureQuestionnaireUi() {
@@ -909,6 +950,10 @@ function setStatus(message, isError = false) {
 }
 
 async function submitResponse() {
+  if (!config?.active) {
+    setStatus("Tämä kysely on suljettu, eikä siihen voi lähettää vastauksia.", true);
+    return;
+  }
   if (appState.submissionInProgress || appState.submissionComplete) {
     return;
   }
